@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Гра</title>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <style>
+    #gameContainer {
+      display: flex;
+    }
+
+    #gameBoard {
+      width: 300px;
+      height: 300px;
+      border: 1px solid black;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      grid-gap: 5px;
+      padding: 5px;
+    }
+
+    .gameCell {
+      border: 1px solid black;
+      padding: 5px;
+      text-align: center;
+    }
+
+    #droppableArea {
+      width: 100px;
+      height: 100px;
+      border: 3px solid black;
+      margin-left: 30px;
+    }
+
+    #droppableArea img {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    #imageToDrag {
+      width: 200px;
+      height: 200px;
+      border: 1px solid black;
+      margin-left: 50px;
+    }
+
+    #imageToDrag img {
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <div id="gameBoard"></div>
+    <div>
+      <div id="droppableArea"></div>
+      <div id="imageToDrag"></div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script>
+    var imagePaths = {
+      animals: ["images/animals/animal1.jpg", "images/animals/animal2.jpg", "images/animals/animal3.jpg"],
+      fish: ["images/fish/fish1.jpg", "images/fish/fish2.jpg", "images/fish/fish3.jpg"],
+      insects: ["images/insects/insect1.jpg", "images/insects/insect2.jpg", "images/insects/insect3.jpg"]
+    };
+
+    function getRandomElement(array) {
+      var randomIndex = Math.floor(Math.random() * array.length);
+      return array[randomIndex];
+    }
+
+    function generateGameBoard() {
+      var gameBoard = $("#gameBoard");
+      gameBoard.empty();
+
+      var allImages = [];
+      for (var category in imagePaths) {
+        allImages = allImages.concat(imagePaths[category]);
+      }
+
+      var randomImages = [];
+      for (var i = 0; i < 9; i++) {
+        var randomImage = getRandomElement(allImages);
+        randomImages.push(randomImage);
+        allImages.splice(allImages.indexOf(randomImage), 1);
+      }
+
+      for (var i = 0; i < 9; i++) {
+        var gameCell = $("<div></div>").addClass("gameCell");
+        var image = $("<img>").attr("src", randomImages[i]);
+        gameCell.append(image);
+        gameBoard.append(gameCell);
+      }
+
+      var randomImage = getRandomElement(allImages);
+      var imageToDrag = $("<div></div>").attr("id", "draggableImage");
+      var image = $("<img>").attr("src", randomImage);
+      imageToDrag.append(image);
+      $("#imageToDrag").append(imageToDrag);
+
+      imageToDrag.draggable({
+        revert: "invalid",
+        start: function(event, ui) {
+          $(this).fadeTo(200, 0.5);
+        },
+        stop: function(event, ui) {
+          $(this).fadeTo(200, 1);
+        }
+      });
+
+      $("#droppableArea").droppable({
+        accept: "#draggableImage",
+        drop: function(event, ui) {
+          var droppedImage = ui.draggable.find("img");
+          var correctImage = $(this).find("img");
+          if (droppedImage.attr("src") === correctImage.attr("src")) {
+            $("#dialog-message").text("Так тримати!");
+          } else {
+            $("#dialog-message").text("Спробуйте ще раз.");
+          }
+          $("#dialog").dialog("open");
+        }
+      });
+
+      $("#dialog").dialog({
+        autoOpen: false,
+        modal: true,
+        buttons: {
+          "OK": function() {
+            $(this).dialog("close");
+          }
+        }
+      });
+    }
+
+    $(function() {
+      generateGameBoard();
+    });
+  </script>
+
+  <div id="dialog" title="Повідомлення">
+    <p id="dialog-message"></p>
+  </div>
+</body>
+</html>
